@@ -129,7 +129,7 @@ def clone_upstream_kernel(label=None, tag=None, patch_id=None):
 def install_kernel():
     cmd = "uname -m"
     result = subprocess.getoutput(cmd)
-    os.chdir(os.getcwd() + "/linux/rpmbuild/RPMS/%s" % result)
+    os.chdir(os.getcwd() + "/rpmbuild/RPMS/%s" % result)
     os.system("dnf install -y *.rpm")
 
 def main(argv):
