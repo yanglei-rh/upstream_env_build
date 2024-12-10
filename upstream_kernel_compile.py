@@ -94,6 +94,7 @@ def install_deps():
     "glibc-headers",
     "python3-devel",
     "net-tools",
+    "openssl",
     "openssl-devel",
     "make",
     "b4",
