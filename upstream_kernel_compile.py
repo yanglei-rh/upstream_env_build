@@ -41,6 +41,12 @@ def _log_error(msg):
     msg = "\033[91mERROR: " + msg + "\033[00m"
     _log(1, msg)
 
+def linux_next_value(patch_title):
+    if "next" in patch_title.lower():
+        linux_next = True
+    else:
+        linux_next = False
+    return linux_next
 
 def add_ca_certificates():
     _log_info("Install Red Hat CA certificates:")
@@ -50,16 +56,23 @@ def add_ca_certificates():
         _log_error("Failed to install Red Hat CA certificates.")
 
 
-def apply_patch(label=None, tag=None, msg_id=None):
-    os.chdir(os.getcwd() + "/linux")
+def apply_patch(label=None, tag=None, msg_id=None, patch_title=None):
+    if linux_next_value(patch_title):
+        os.chdir(os.getcwd() + "/linux-next")
+    else:
+        os.chdir(os.getcwd() + "/linux")
     cmd = "b4 am %s" % msg_id
     result = subprocess.getoutput(cmd)
     mbox = result.split("\n")[-1].strip()
     os.system(mbox)
 
-def build_kernel_pkg():
-    if "/linux" not in os.getcwd():
-        os.chdir(os.getcwd() + "/linux")
+def build_kernel_pkg(patch_title=None):
+    if linux_next_value(patch_title):
+        if "/linux-next" not in os.getcwd():
+            os.chdir(os.getcwd() + "/linux-next")
+    else:
+        if "/linux" not in os.getcwd():
+            os.chdir(os.getcwd() + "/linux")
     _log_info("Build upstream kernel package...")
     _log_info("copy host config file")
     build_cmd = "cp /boot/config-* .config"
@@ -114,17 +127,20 @@ def install_deps():
         if os.system("rpm -q %s" % rpm)!= 0:
             os.system("dnf install -y %s" % rpm)
 
-def clone_upstream_kernel(label=None, tag=None, patch_id=None):
+def clone_upstream_kernel(label=None, tag=None, patch_id=None, patch_title=None):
     if os.system("rpm -q git") !=0:
         if os.system("yum install -y git") != 0:
             _log_error("Failed to install git related packages.")
     _log_info("Clone upstream kernel repo.")
-    download_kernel = "git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+    if linux_next_value(patch_title):
+        download_kernel = "git clone https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
+    else:
+        download_kernel = "git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
     if os.system(download_kernel) != 0:
         _log_error("Failed to clone kernel repo.")
     if patch_id:
-        apply_patch(label, tag, patch_id)
-    build_kernel_pkg()
+        apply_patch(label, tag, patch_id, patch_title)
+    build_kernel_pkg(patch_title)
 
 def install_kernel():
     cmd = "uname -m"
@@ -137,9 +153,10 @@ def main(argv):
         label = argv.get("label", None)
         tag = argv.get("tag", "linux-kernel@vger.kernel.org")
         patch_id = argv.get("patch_id", None)
+        patch_title = argv.get("patch_title", None)
         add_ca_certificates()
         install_deps()
-        clone_upstream_kernel(label, tag, patch_id)
+        clone_upstream_kernel(label, tag, patch_id, patch_title)
         install_kernel()
     except Exception as e:
         _log_error(str(e))
@@ -149,5 +166,6 @@ if __name__ == "__main__":
     parser.add_argument("--label", default=None, help="gmail label where you want to get the patch")
     parser.add_argument("--tag", default="linux-kernel@vger.kernel.org", help="gmail tag where you want to get the patch")
     parser.add_argument("--patch_id", default=None, help="patch messages id that needed to apply")
+    parser.add_argument("--patch_title", default=None, help="to help confirm which repo need to be clone")
     config_args = vars(parser.parse_args())
     main(config_args)
