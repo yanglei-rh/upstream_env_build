@@ -9,7 +9,7 @@ import time
 
 QUIET = False
 LOG_LVL = 4
-##Replace JIRA_ACCESS_TOKEN with your own jira token before the tests. ####
+#Replace JIRA_ACCESS_TOKEN with your own jira token before the tests. ####
 #for gmail
 
 def _log(lvl, msg):
@@ -42,11 +42,9 @@ def _log_error(msg):
     _log(1, msg)
 
 def linux_next_value(patch_title):
-    if "next" in patch_title.lower():
-        linux_next = True
-    else:
-        linux_next = False
-    return linux_next
+    match = re.search(r'\[.*?next.*?\]', patch_title, re.IGNORECASE)
+    return match is not None
+
 
 def add_ca_certificates():
     _log_info("Install Red Hat CA certificates:")
@@ -66,7 +64,7 @@ def apply_patch(label=None, tag=None, msg_id=None, patch_title=None):
     mbox = result.split("\n")[-1].strip()
     os.system(mbox)
 
-def build_kernel_pkg(patch_title=None):
+def build_kernel_pkg(patch_title):
     if linux_next_value(patch_title):
         if "/linux-next" not in os.getcwd():
             os.chdir(os.getcwd() + "/linux-next")
