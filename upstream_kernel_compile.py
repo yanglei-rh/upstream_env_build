@@ -119,7 +119,9 @@ def install_deps():
     "elfutils-libelf-devel",
     "perl",
     "dwarves",
-    "rsync"
+    "rsync",
+    "uuid-devel",
+    "libuuid-devel"
     )
     for rpm in RPM_REQS:
         if os.system("rpm -q %s" % rpm)!= 0:
