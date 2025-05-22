@@ -135,7 +135,7 @@ def clone_upstream_kernel(label=None, tag=None, patch_id=None, patch_title=None)
     if linux_next_value(patch_title):
         download_kernel = "git clone https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
     else:
-        download_kernel = "git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+        download_kernel = "git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
     if os.system(download_kernel) != 0:
         _log_error("Failed to clone kernel repo.")
     if patch_id:
